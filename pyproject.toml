@@ -1,0 +1,46 @@
+[tool.poetry]
+name = "spotify_charts_pipeline"
+version = "0.1.0"
+description = "Get the daily Spotify Charts data history and load to a PostgreSLQ database"
+authors = ["Felipe Allegretti"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "~3.9"
+requests = "^2.28.1"
+python-dotenv = "^0.21.0"
+spotipy = "^2.22.0"
+pandas = "^1.5.2"
+sqlalchemy = "^1.4.46"
+psycopg2-binary = "^2.9.5"
+tomli = "^2.0.1"
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.12.0"
+isort = "^5.11.4"
+
+[tool.black]
+line-length = 120
+verbose = true
+preview = true
+
+[tool.isort]
+profile = "black"
+
+[tool.logging]
+version = 1
+
+[tool.logging.loggers.root]
+level = "INFO"
+handlers = ['stream_handler']
+
+[tool.logging.handlers.stream_handler]
+class = "logging.StreamHandler"
+formatter = "formatter"
+level = "INFO"
+stream = "ext://sys.stdout"
+
+[tool.logging.formatters.formatter]
+format = "%(asctime)s %(levelname)s - %(message)s"
+datefmt = "%d/%m/%Y %H:%M:%S"
