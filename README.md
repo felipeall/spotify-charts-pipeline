@@ -33,4 +33,7 @@ Example
 ````bash
 python src/main.py --from_date 2023-01-01 --to_date 2023-01-31 --country_code BR
 ````
-
+## Unit tests
+````bash
+docker compose -f docker-compose.tests.yml up --build --abort-on-container-exit
+````

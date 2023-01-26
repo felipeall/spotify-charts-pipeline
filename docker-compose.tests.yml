@@ -22,4 +22,4 @@ services:
       - .env
     volumes:
       - .:/opt/app
-    entrypoint: coverage report -m # bash -c "tail -f /dev/null"
+    entrypoint: pytest --cov=. --cov-report term --cache-clear
