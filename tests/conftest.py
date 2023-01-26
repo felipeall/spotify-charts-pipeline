@@ -5,8 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.engine import URL
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-import src.models.base
-from src.models.user import User
+from src.models.base import Base
 
 
 @pytest.fixture(scope="session")
@@ -22,37 +21,16 @@ def connection():
     return engine.connect()
 
 
-def seed_database():
-    users = [
-        {
-            "id": 1,
-            "name": "John Doe",
-        },
-        # ...
-    ]
-
-    for user in users:
-        db_user = User(**user)
-        db_session.add(db_user)
-    db_session.commit()
-
-
 @pytest.fixture(scope="session")
 def setup_database(connection):
-    src.models.base.Base.metadata.bind = connection
-    src.models.base.Base.metadata.create_all()
-
-    # seed_database()
-
+    Base.metadata.bind = connection
+    Base.metadata.create_all()
     yield
-
-    src.models.base.Base.metadata.drop_all()
+    Base.metadata.drop_all()
 
 
 @pytest.fixture
 def db_session(setup_database, connection):
     transaction = connection.begin()
-    yield scoped_session(
-        sessionmaker(autocommit=False, autoflush=False, bind=connection)
-    )
+    yield scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=connection))
     transaction.rollback()
