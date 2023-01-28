@@ -2,7 +2,7 @@
 
 Get the daily [Spotify Charts](https://charts.spotify.com/charts/overview/global) data history and load to a PostgreSLQ database
 
-![](imgs/schema.png)
+![](https://user-images.githubusercontent.com/20917430/215230710-de0a4f85-3d98-4ad5-8367-c6739ee17347.png)
 
 ## Set up
 
