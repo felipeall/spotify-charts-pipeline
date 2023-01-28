@@ -14,32 +14,55 @@ log: Logger = logging.getLogger()
 
 @dataclass
 class ArtistsWrapper:
+    """Transform and load artists' metadata"""
+
     def __post_init__(self) -> None:
+        """Instantiate Spotify and Postgres clients"""
         self.spotify: SpotifyClient = SpotifyClient()
         self.postgres: PostgresClient = PostgresClient()
 
     def run(self, daily_chart: dict, chart_date: str, country_code: str) -> None:
-        artist: pd.DataFrame = self._parse_artist_metadata(daily_chart)
-        self._load_artist(artist, chart_date, country_code)
+        """Run the Artists Wrapper, which extracts the artists' metadata from the daily chart and uploads to the
+        database the records that doesn't exist.
+
+        :param daily_chart: Daily chart data extracted from the Spotify API
+        :param chart_date: Date of the chart being processed
+        :param country_code: Code of the country being processed
+        """
+        artists: pd.DataFrame = self._extract_artists_metadata(daily_chart)
+        self._load_artists(artists, chart_date, country_code)
 
     @staticmethod
-    def _parse_artist_metadata(daily_charts: dict) -> pd.DataFrame:
-        df: pd.DataFrame = pd.json_normalize(daily_charts["entries"])
+    def _extract_artists_metadata(daily_charts: dict) -> pd.DataFrame:
+        """Parse the daily chart data by extracting the artists' metadata.
 
-        df = df.explode("trackMetadata.artists")
-        df[["name", "uri"]] = df["trackMetadata.artists"].apply(pd.Series)
-        df = df.loc[:, ["name", "uri"]]
-        df.drop_duplicates(inplace=True)
+        :param daily_charts: Daily chart data extracted from the Spotify API
+        :return: Parsed artists' metadata
+        """
+        artists: pd.DataFrame = (
+            pd.json_normalize(daily_charts["entries"])
+            .explode("trackMetadata.artists")
+            .loc[:, "trackMetadata.artists"]
+            .apply(pd.Series)
+            .rename(columns={"spotifyUri": "uri"})
+            .drop_duplicates()
+        )
 
-        return df
+        return artists
 
-    def _load_artist(self, artist: pd.DataFrame, chart_date: str, country_code: str) -> None:
-        for _, row in artist.iterrows():
+    def _load_artists(self, artists: pd.DataFrame, chart_date: str, country_code: str) -> None:
+        """Load to the database the artists records that doesn't exist yet.
+
+        :param artists: Parsed artists' metadata
+        :param chart_date: Date of the chart being processed
+        :param country_code: Code of the country being processed
+        """
+        for _, row in artists.iterrows():
             result = self.postgres.session.execute(select(Artists).filter_by(uri=row["uri"]))
             exists = result.scalars().first()
 
             if not exists:
-                artist = Artists(
+                artist: Artists = Artists(
                     uri=row["uri"],
                     name=row["name"],
                 )

@@ -14,25 +14,47 @@ log: Logger = logging.getLogger()
 
 @dataclass
 class ChartsWrapper:
+    """Transform and load charts' metadata"""
+
     def __post_init__(self) -> None:
+        """Instantiate Spotify and Postgres clients"""
         self.spotify: SpotifyClient = SpotifyClient()
         self.postgres: PostgresClient = PostgresClient()
 
     def run(self, daily_chart: dict, chart_date: str, country_code: str) -> None:
-        chart: pd.DataFrame = self._parse_chart_metadata(daily_chart)
-        self._load_chart(chart, chart_date, country_code)
+        """Run the Charts Wrapper, which extracts the charts' metadata from the daily chart and uploads to the
+        database the records that doesn't exist.
+
+        :param daily_chart: Daily chart data extracted from the Spotify API
+        :param chart_date: Date of the chart being processed
+        :param country_code: Code of the country being processed
+        """
+        charts: pd.DataFrame = self._extract_charts_metadata(daily_chart)
+        self._load_charts(charts, chart_date, country_code)
 
     @staticmethod
-    def _parse_chart_metadata(daily_charts: dict) -> pd.DataFrame:
-        df = pd.json_normalize(daily_charts["displayChart"]["chartMetadata"])
+    def _extract_charts_metadata(daily_charts: dict) -> pd.DataFrame:
+        """Parse the daily chart data by extracting the charts' metadata.
 
-        df.columns = [col.split(".")[-1] for col in df.columns]
-        df["latestDate"] = pd.to_datetime(df["latestDate"])
-        df["earliestDate"] = pd.to_datetime(df["earliestDate"])
+        :param daily_charts: Daily chart data extracted from the Spotify API
+        :return: Parsed charts' metadata
+        """
+        charts: pd.DataFrame = (
+            pd.json_normalize(daily_charts["displayChart"]["chartMetadata"])
+            .pipe(lambda df: df.set_axis([col.split(".")[-1] for col in df.columns], axis=1))
+            .assign(latestDate=lambda x: pd.to_datetime(x["latestDate"]))
+            .assign(earliestDate=lambda x: pd.to_datetime(x["earliestDate"]))
+        )
 
-        return df
+        return charts
 
-    def _load_chart(self, charts: pd.DataFrame, chart_date, country_code):
+    def _load_charts(self, charts: pd.DataFrame, chart_date, country_code):
+        """Load to the database the tracks records that doesn't exist yet.
+
+        :param charts: Parsed charts' metadata
+        :param chart_date: Date of the chart being processed
+        :param country_code: Code of the country being processed
+        """
         for _, row in charts.iterrows():
             result = self.postgres.session.execute(select(Charts).filter_by(uri=row["uri"]))
             exists = result.scalars().first()
