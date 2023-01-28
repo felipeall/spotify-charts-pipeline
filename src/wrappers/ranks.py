@@ -14,29 +14,50 @@ log: Logger = logging.getLogger()
 
 @dataclass
 class RanksWrapper:
+    """Transform and load ranks' metadata"""
+
     def __post_init__(self) -> None:
+        """Instantiate Spotify and Postgres clients"""
         self.spotify: SpotifyClient = SpotifyClient()
         self.postgres: PostgresClient = PostgresClient()
 
     def run(self, daily_chart: dict, chart_date: str, country_code: str) -> None:
-        rank: pd.DataFrame = self._parse_rank_metadata(daily_chart)
-        self._load_rank(rank, chart_date, country_code)
+        """Run the Ranks Wrapper, which extracts the ranks' metadata from the daily chart and uploads to the
+        database the records that doesn't exist.
+
+        :param daily_chart: Daily chart data extracted from the Spotify API
+        :param chart_date: Date of the chart being processed
+        :param country_code: Code of the country being processed
+        """
+        ranks: pd.DataFrame = self._extract_ranks_metadata(daily_chart)
+        self._load_ranks(ranks, chart_date, country_code)
 
     @staticmethod
-    def _parse_rank_metadata(daily_charts: dict) -> pd.DataFrame:
-        df: pd.DataFrame = pd.json_normalize(daily_charts["entries"])
-        cols = [col for col in df.columns if col.startswith("chartEntryData.")] + ["trackMetadata.trackUri"]
-        df = df.loc[:, cols]
-        df.columns = [col.split(".")[-1] for col in df.columns]
-        df.rename(columns={"value": "metricValue", "type": "metricType"}, inplace=True)
+    def _extract_ranks_metadata(daily_charts: dict) -> pd.DataFrame:
+        """Parse the daily chart data by extracting the ranks' metadata.
 
-        df["chartUri"] = daily_charts["displayChart"]["chartMetadata"]["uri"]
-        df["date"] = daily_charts["displayChart"]["date"]
+        :param daily_charts: Daily chart data extracted from the Spotify API
+        :return: Parsed ranks' metadata
+        """
+        ranks: pd.DataFrame = (
+            pd.json_normalize(daily_charts["entries"])
+            .pipe(lambda df: df.set_axis([col.split(".")[-1] for col in df.columns], axis=1))
+            .drop(columns=["displayImageUri", "artists", "labels", "releaseDate"])
+            .rename(columns={"value": "metricValue", "type": "metricType"})
+            .assign(chartUri=daily_charts["displayChart"]["chartMetadata"]["uri"])
+            .assign(date=daily_charts["displayChart"]["date"])
+        )
 
-        return df
+        return ranks
 
-    def _load_rank(self, rank: pd.DataFrame, chart_date: str, country_code: str) -> None:
-        for _, row in rank.iterrows():
+    def _load_ranks(self, ranks: pd.DataFrame, chart_date: str, country_code: str) -> None:
+        """Load to the database the ranks records that doesn't exist yet.
+
+        :param ranks: Parsed ranks' metadata
+        :param chart_date: Date of the chart being processed
+        :param country_code: Code of the country being processed
+        """
+        for _, row in ranks.iterrows():
             result = self.postgres.session.execute(
                 select(Ranks).filter_by(
                     chartUri=row["chartUri"],

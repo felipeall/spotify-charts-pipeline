@@ -15,31 +15,51 @@ log: Logger = logging.getLogger()
 
 @dataclass
 class TracksWrapper:
+    """Transform and load tracks' metadata"""
+
     def __post_init__(self) -> None:
+        """Instantiate Spotify and Postgres clients"""
         self.spotify: SpotifyClient = SpotifyClient()
         self.postgres: PostgresClient = PostgresClient()
 
     def run(self, daily_chart: dict, chart_date: str, country_code: str) -> None:
-        track: pd.DataFrame = self._parse_track_metadata(daily_chart)
-        self._load_track(track, chart_date, country_code)
+        """Run the Tracks Wrapper, which extracts the tracks' metadata from the daily chart and uploads to the
+        database the records that doesn't exist.
+
+        :param daily_chart: Daily chart data extracted from the Spotify API
+        :param chart_date: Date of the chart being processed
+        :param country_code: Code of the country being processed
+        """
+        tracks: pd.DataFrame = self._extract_tracks_metadata(daily_chart)
+        self._load_tracks(tracks, chart_date, country_code)
 
     @staticmethod
-    def _parse_track_metadata(daily_charts: dict) -> pd.DataFrame:
-        df: pd.DataFrame = pd.json_normalize(daily_charts["entries"])
-        df = df.loc[:, df.columns.str.startswith("trackMetadata.")]
-        df.columns = [col.split(".")[-1] for col in df.columns]
+    def _extract_tracks_metadata(daily_charts: dict) -> pd.DataFrame:
+        """Parse the daily chart data by extracting the tracks' metadata.
 
-        df["artistUri"] = df["artists"].apply(lambda x: [row["spotifyUri"] for row in x])
-        df["labels"] = df["labels"].apply(lambda x: [row["name"] for row in x])
+        :param daily_charts: Daily chart data extracted from the Spotify API
+        :return: Parsed tracks' metadata
+        """
+        tracks = (
+            pd.json_normalize(daily_charts["entries"])
+            .pipe(lambda df: df.loc[:, [col for col in df.columns if col.startswith("trackMetadata.")]])
+            .pipe(lambda df: df.set_axis([col.split(".")[-1] for col in df.columns], axis=1))
+            .assign(artistUri=lambda x: x["artists"].apply(lambda y: [row["spotifyUri"] for row in y]))
+            .assign(labels=lambda x: x["labels"].apply(lambda y: [row["name"] for row in y]))
+            .drop(columns=["artists"])
+            .replace(np.nan, None)
+        )
 
-        df = df.replace(np.nan, None)
+        return tracks
 
-        df.drop(columns=["artists"], inplace=True)
+    def _load_tracks(self, tracks: pd.DataFrame, chart_date: str, country_code: str) -> None:
+        """Load to the database the tracks records that doesn't exist yet.
 
-        return df
-
-    def _load_track(self, track: pd.DataFrame, chart_date: str, country_code: str) -> None:
-        for _, row in track.iterrows():
+        :param tracks: Parsed tracks' metadata
+        :param chart_date: Date of the chart being processed
+        :param country_code: Code of the country being processed
+        """
+        for _, row in tracks.iterrows():
             result = self.postgres.session.execute(select(Tracks).filter_by(trackUri=row["trackUri"]))
             exists = result.scalars().first()
 
