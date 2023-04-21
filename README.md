@@ -9,7 +9,6 @@ Get the daily [Spotify Charts](https://charts.spotify.com/charts/overview/global
 1. Register on [Spotify Developer](https://developer.spotify.com/dashboard/)
 2. Create an app
 3. Add a Redirect URI to the app (e.g. `http://localhost:9000`)
-4. Add your CLIENT_ID, SECRET_ID and REDIRECT_URI to the `.env` file
 
 ## Poetry
 Poetry is a python dependency management tool to manage dependencies, packages, and libraries in your python project. 
@@ -26,6 +25,11 @@ Access the project root folder
 ````bash
 cd spotify-charts-pipeline
 ````
+
+Create a `.env` file and add your `CLIENT_ID`, `SECRET_ID` and `REDIRECT_URI`
+```bash
+cp .env.template .env
+```
 
 Create a Poetry virtual environment
 ````bash
