@@ -48,6 +48,7 @@ class TracksWrapper:
             .assign(labels=lambda x: x["labels"].apply(lambda y: [row["name"] for row in y]))
             .drop(columns=["artists"])
             .replace(np.nan, None)
+            .replace("", None)
         )
 
         return tracks
