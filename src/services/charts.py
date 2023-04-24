@@ -10,7 +10,7 @@ from src.models.charts import Charts
 
 
 @dataclass
-class ChartsWrapper:
+class ChartsService:
     """Transform and load charts' metadata"""
 
     def __post_init__(self) -> None:
@@ -19,7 +19,7 @@ class ChartsWrapper:
         self.postgres: PostgresClient = PostgresClient()
 
     def run(self, daily_chart: dict, chart_date: str, country_code: str) -> None:
-        """Run the Charts Wrapper, which extracts the charts' metadata from the daily chart and uploads to the
+        """Run the Charts Service, which extracts the charts' metadata from the daily chart and uploads to the
         database the records that doesn't exist.
 
         :param daily_chart: Daily chart data extracted from the Spotify API

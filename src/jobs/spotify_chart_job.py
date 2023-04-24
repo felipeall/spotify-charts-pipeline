@@ -5,10 +5,10 @@ import pandas as pd
 from loguru import logger as log
 
 from src.clients.spotify import SpotifyClient
-from src.wrappers.artists import ArtistsWrapper
-from src.wrappers.charts import ChartsWrapper
-from src.wrappers.ranks import RanksWrapper
-from src.wrappers.tracks import TracksWrapper
+from src.services.artists import ArtistsService
+from src.services.charts import ChartsService
+from src.services.ranks import RanksService
+from src.services.tracks import TracksService
 
 
 @dataclass
@@ -18,10 +18,10 @@ class SpotifyChartJob:
     country_code: str
 
     def __post_init__(self) -> None:
-        self.charts_wrapper: ChartsWrapper = ChartsWrapper()
-        self.tracks_wrapper: TracksWrapper = TracksWrapper()
-        self.artists_wrapper: ArtistsWrapper = ArtistsWrapper()
-        self.ranks_wrapper: RanksWrapper = RanksWrapper()
+        self.charts_service: ChartsService = ChartsService()
+        self.tracks_service: TracksService = TracksService()
+        self.artists_service: ArtistsService = ArtistsService()
+        self.ranks_service: RanksService = RanksService()
         self.spotify_client: SpotifyClient = SpotifyClient()
 
     def run(self) -> None:
@@ -40,10 +40,10 @@ class SpotifyChartJob:
                 log.error(f"[{chart_date}] [{self.country_code}] - Daily chart not available!")
                 continue
 
-            self.charts_wrapper.run(daily_chart=daily_chart, chart_date=chart_date, country_code=self.country_code)
-            self.tracks_wrapper.run(daily_chart=daily_chart, chart_date=chart_date, country_code=self.country_code)
-            self.artists_wrapper.run(daily_chart=daily_chart, chart_date=chart_date, country_code=self.country_code)
-            self.ranks_wrapper.run(daily_chart=daily_chart, chart_date=chart_date, country_code=self.country_code)
+            self.charts_service.run(daily_chart=daily_chart, chart_date=chart_date, country_code=self.country_code)
+            self.tracks_service.run(daily_chart=daily_chart, chart_date=chart_date, country_code=self.country_code)
+            self.artists_service.run(daily_chart=daily_chart, chart_date=chart_date, country_code=self.country_code)
+            self.ranks_service.run(daily_chart=daily_chart, chart_date=chart_date, country_code=self.country_code)
 
     def _construct_job_parameters(self) -> list:
         return [str(d.date()) for d in pd.date_range(self.from_date, self.to_date)]

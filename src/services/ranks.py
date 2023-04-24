@@ -10,7 +10,7 @@ from src.models.ranks import Ranks
 
 
 @dataclass
-class RanksWrapper:
+class RanksService:
     """Transform and load ranks' metadata"""
 
     def __post_init__(self) -> None:
@@ -19,7 +19,7 @@ class RanksWrapper:
         self.postgres: PostgresClient = PostgresClient()
 
     def run(self, daily_chart: dict, chart_date: str, country_code: str) -> None:
-        """Run the Ranks Wrapper, which extracts the ranks' metadata from the daily chart and uploads to the
+        """Run the Ranks Service, which extracts the ranks' metadata from the daily chart and uploads to the
         database the records that doesn't exist.
 
         :param daily_chart: Daily chart data extracted from the Spotify API
