@@ -1,9 +1,16 @@
 version: '3'
 
+x-superset-image: &superset-image apache/superset:${TAG:-latest-dev}
+x-superset-depends-on: &superset-depends-on
+  - db
+  - redis
+x-superset-volumes: &superset-volumes
+  - ./docker:/app/docker
+  - superset_home:/app/superset_home
+
 services:
   spotify_db:
     container_name: spotify_db
-    domainname: spotify_db
     image: postgres:latest
     env_file:
       - .env
@@ -12,9 +19,8 @@ services:
     volumes:
       - spotify_db:/var/lib/postgresql/data
 
-  init_db:
-    container_name: init_db
-    domainname: init_db
+  init_spotify_db:
+    container_name: init_spotify_db
     build:
       context: ./
       dockerfile: Dockerfile
@@ -26,5 +32,85 @@ services:
       - spotify_db
     entrypoint: python docker/init_db.py
 
+  superset:
+    build:
+      context: .
+      dockerfile: ./superset/Dockerfile
+    ports:
+      - "8088:8088"
+    command: gunicorn --bind  "0.0.0.0:8088" --access-logfile '-' --error-logfile '-' --workers 1 --worker-class gthread --threads 20 --timeout 60 --limit-request-line 0 --limit-request-field_size 0 "superset.app:create_app()"
+    depends_on:
+      - init_spotify_db
+
+#
+#  redis:
+#    image: redis:7
+#    container_name: superset_cache
+#    restart: unless-stopped
+#    volumes:
+#      - redis:/data
+#
+#  db:
+#    env_file: docker/.env-non-dev
+#    image: postgres:14
+#    container_name: superset_db
+#    restart: unless-stopped
+#    volumes:
+#      - db_home:/var/lib/postgresql/data
+#
+#  superset:
+#    env_file: docker/.env-non-dev
+#    image: *superset-image
+#    container_name: superset_app
+#    command: ["/app/docker/docker-bootstrap.sh", "app-gunicorn"]
+#    user: "root"
+#    restart: unless-stopped
+#    ports:
+#      - 8088:8088
+#    depends_on: *superset-depends-on
+#    volumes: *superset-volumes
+#
+#  superset-init:
+#    image: *superset-image
+#    container_name: superset_init
+#    command: ["/app/docker/docker-init.sh"]
+#    env_file: docker/.env-non-dev
+#    depends_on: *superset-depends-on
+#    user: "root"
+#    volumes: *superset-volumes
+#    healthcheck:
+#      disable: true
+#
+#  superset-worker:
+#    image: *superset-image
+#    container_name: superset_worker
+#    command: ["/app/docker/docker-bootstrap.sh", "worker"]
+#    env_file: docker/.env-non-dev
+#    restart: unless-stopped
+#    depends_on: *superset-depends-on
+#    user: "root"
+#    volumes: *superset-volumes
+#    healthcheck:
+#      test: ["CMD-SHELL", "celery -A superset.tasks.celery_app:app inspect ping -d celery@$$HOSTNAME"]
+#
+#  superset-worker-beat:
+#    image: *superset-image
+#    container_name: superset_worker_beat
+#    command: ["/app/docker/docker-bootstrap.sh", "beat"]
+#    env_file: docker/.env-non-dev
+#    restart: unless-stopped
+#    depends_on: *superset-depends-on
+#    user: "root"
+#    volumes: *superset-volumes
+#    healthcheck:
+#      disable: true
+
+
 volumes:
   spotify_db:
+  superset_home:
+    external: false
+  db_home:
+    external: false
+  redis:
+    external: false
