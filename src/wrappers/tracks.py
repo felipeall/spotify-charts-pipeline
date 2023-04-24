@@ -76,11 +76,12 @@ class TracksWrapper:
                 self.postgres.session.add(track)
                 self.postgres.session.commit()
                 log.info(
-                    f"[{chart_date}] [{country_code}] - Added track to database: {row['trackName']} ({row['trackUri']})"
+                    f"[{chart_date}] [{country_code}] - "
+                    f"Added track to database: {row['trackName']} ({row['trackUri']})",
                 )
 
             else:
                 log.warning(
-                    f"[{chart_date}] [{country_code}] - Track already exists in database:"
-                    f" {row['trackName']} ({row['trackUri']})"
+                    f"[{chart_date}] [{country_code}] - "
+                    f"Track already exists in database: {row['trackName']} ({row['trackUri']})",
                 )

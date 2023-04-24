@@ -72,5 +72,6 @@ class ArtistsWrapper:
 
             else:
                 log.warning(
-                    f"[{chart_date}] [{country_code}] - Artist already exists in database: {row['name']} ({row['uri']})"
+                    f"[{chart_date}] [{country_code}] - "
+                    f"Artist already exists in database: {row['name']} ({row['uri']})",
                 )

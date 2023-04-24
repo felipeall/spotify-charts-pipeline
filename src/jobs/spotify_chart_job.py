@@ -36,7 +36,7 @@ class SpotifyChartJob:
         for chart_date in job_parameters:
             log.info(f"[{chart_date}] [{self.country_code}] - Getting daily chart...")
             daily_chart: dict = self.spotify_client.get_daily_chart(
-                chart_date=chart_date, country_code=self.country_code
+                chart_date=chart_date, country_code=self.country_code,
             )
 
             if not daily_chart:
@@ -152,13 +152,13 @@ class SpotifyChartJob:
 
         if to_date_parsed > datetime.today():
             log.critical(
-                f"`{self.to_date}` is an invalid `to_date` argument, should be <= `{date.today().isoformat()}`"
+                f"`{self.to_date}` is an invalid `to_date` argument, should be <= `{date.today().isoformat()}`",
             )
             raise SystemExit
 
         if from_date_parsed >= to_date_parsed:
             log.critical(
                 f"`from_date {self.from_date}` and `to_date {self.to_date}` are invalid arguments, Please use"
-                " `from_date` < `to_date`"
+                " `from_date` < `to_date`",
             )
             raise SystemExit

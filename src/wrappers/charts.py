@@ -76,11 +76,11 @@ class ChartsWrapper:
                 self.postgres.session.add(chart)
                 self.postgres.session.commit()
                 log.info(
-                    f"[{chart_date}] [{country_code}] - Added chart to database: {row['readableTitle']} ({row['uri']})"
+                    f"[{chart_date}] [{country_code}] - Added chart to database: {row['readableTitle']} ({row['uri']})",
                 )
 
             else:
                 log.warning(
                     f"[{chart_date}] [{country_code}] - Chart already exists in database:"
-                    f" {row['readableTitle']} ({row['uri']})"
+                    f" {row['readableTitle']} ({row['uri']})",
                 )

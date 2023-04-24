@@ -63,7 +63,7 @@ class RanksWrapper:
                     chartUri=row["chartUri"],
                     date=row["date"],
                     currentRank=row["currentRank"],
-                )
+                ),
             )
             exists = result.scalars().first()
 
@@ -88,11 +88,11 @@ class RanksWrapper:
                 self.postgres.session.commit()
                 log.info(
                     f"[{chart_date}] [{country_code}] - Added rank position to database:"
-                    f" #{row['currentRank']} ({row['chartUri']})"
+                    f" #{row['currentRank']} ({row['chartUri']})",
                 )
 
             else:
                 log.warning(
                     f"[{chart_date}] [{country_code}] - Rank position already exists in database:"
-                    f" #{row['currentRank']} ({row['chartUri']})"
+                    f" #{row['currentRank']} ({row['chartUri']})",
                 )
