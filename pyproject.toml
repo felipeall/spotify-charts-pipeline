@@ -17,19 +17,22 @@ psycopg2-binary = "^2.9.5"
 tomli = "^2.0.1"
 
 [tool.poetry.group.dev.dependencies]
-black = "^22.12.0"
-isort = "^5.11.4"
 pytest = "^7.2.1"
 coverage = "^7.1.0"
 pytest-cov = "^4.0.0"
+ruff = "^0.0.262"
 
-[tool.black]
+[tool.ruff]
 line-length = 120
-verbose = true
-preview = true
-
-[tool.isort]
-profile = "black"
+select = [
+    "F",  # pyflakes
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "I",  # isort
+    "COM",  # flake8-commas
+    "Q",  # flake8-quotes
+    "PL",  # pylint
+]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
