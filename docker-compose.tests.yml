@@ -6,7 +6,7 @@ services:
     env_file:
       - .env
     ports:
-      - "5432:5432"
+      - "${TEST_POSTGRES_PORT}:5432"
     environment:
       - POSTGRES_USER=${TEST_POSTGRES_USER}
       - POSTGRES_PASSWORD=${TEST_POSTGRES_PASSWORD}
@@ -20,6 +20,4 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
-    volumes:
-      - .:/opt/app
     entrypoint: pytest --cov=. --cov-report term --cache-clear
