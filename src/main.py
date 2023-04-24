@@ -1,11 +1,9 @@
 import argparse
 from datetime import date, timedelta
-from logging import Logger
+
+from loguru import logger as log
 
 from src.jobs.spotify_chart_job import SpotifyChartJob
-from src.utils.logging import load_custom_logger
-
-log: Logger = load_custom_logger()
 
 if __name__ == "__main__":
     log.info("Starting Spotify Charts Pipeline...")

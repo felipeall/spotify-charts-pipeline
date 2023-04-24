@@ -1,17 +1,14 @@
-import logging
 from dataclasses import dataclass
 from datetime import date, datetime
-from logging import Logger
 
 import pandas as pd
+from loguru import logger as log
 
 from src.clients.spotify import SpotifyClient
 from src.wrappers.artists import ArtistsWrapper
 from src.wrappers.charts import ChartsWrapper
 from src.wrappers.ranks import RanksWrapper
 from src.wrappers.tracks import TracksWrapper
-
-log: Logger = logging.getLogger()
 
 
 @dataclass

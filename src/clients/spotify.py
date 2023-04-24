@@ -1,8 +1,6 @@
-import logging
 import os
 from dataclasses import dataclass
 from json import JSONDecodeError
-from logging import Logger
 from typing import Optional
 
 import requests
@@ -10,7 +8,6 @@ from dotenv import load_dotenv
 from requests import Response
 from spotipy import SpotifyOAuth
 
-log: Logger = logging.getLogger()
 load_dotenv()
 
 

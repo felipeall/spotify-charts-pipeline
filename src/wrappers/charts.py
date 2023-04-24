@@ -1,15 +1,12 @@
-import logging
 from dataclasses import dataclass
-from logging import Logger
 
 import pandas as pd
+from loguru import logger as log
 from sqlalchemy import select
 
 from src.clients.postgres import PostgresClient
 from src.clients.spotify import SpotifyClient
 from src.models.charts import Charts
-
-log: Logger = logging.getLogger()
 
 
 @dataclass
