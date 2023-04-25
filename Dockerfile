@@ -4,6 +4,8 @@ FROM --platform=linux/amd64 ${FROM_CONTAINER_NAME}:${PYTHON_RELEASE:-3.9.16}-sli
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
+RUN apt-get update && apt-get install -y curl jq
+
 RUN mkdir -p /app
 
 WORKDIR /app

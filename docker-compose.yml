@@ -3,7 +3,6 @@ version: '3'
 services:
   spotify_db:
     container_name: spotify_db
-    domainname: spotify_db
     image: postgres:latest
     env_file:
       - .env
@@ -14,7 +13,6 @@ services:
 
   init_db:
     container_name: init_db
-    domainname: init_db
     build:
       context: ./
       dockerfile: Dockerfile
@@ -26,5 +24,50 @@ services:
       - spotify_db
     entrypoint: python docker/init_db.py
 
+  metabase_db:
+    container_name: metabase_db
+    image: postgres:latest
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${MB_DB_USER}
+      POSTGRES_PASSWORD: ${MB_DB_PASS}
+      POSTGRES_PORT: 5432
+#      POSTGRES_HOST: localhost
+      POSTGRES_DB: ${MB_DB_DBNAME}
+    ports:
+      - "5430:5432"
+    volumes:
+      - metabase_db:/var/lib/postgresql/data
+
+  metabase:
+    container_name: metabase
+    image: metabase/metabase
+    restart: always
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - metabase_db
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "localhost:3000/api/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  metabase_init:
+    container_name: metabase_init
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    command: /bin/sh -c "docker/init_metabase.sh"
+    depends_on:
+      metabase:
+        condition: service_healthy
+
 volumes:
   spotify_db:
+  metabase_db:
